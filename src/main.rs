@@ -13,13 +13,21 @@ fn main() -> io::Result<()> {
     for line in handle.lines() {
         let str = line.unwrap();
         let ip_address: Ipv4Addr = str.parse().expect("Invalid IP");
-        for net4 in &nets {
-            if net4.contains(&ip_address) {
-                println!("{}", net4);
-            }
+        let net4 = get_containing_net(&nets, ip_address);
+        if let Some(net) = net4 {
+            println!("{}", net);
+        } else {
+            println!("No matching net found for {}", ip_address);
         }
     }
     Ok(())
+}
+
+fn get_containing_net<'a>(
+    nets: &'a [Ipv4Net],
+    ip_address: Ipv4Addr
+) -> Option<&'a Ipv4Net> {
+    nets.iter().find(|net| net.contains(&ip_address))
 }
 
 fn read_nets_from_directory(folder_path: &str) -> Result<Vec<Ipv4Net>, Box<dyn Error>>
