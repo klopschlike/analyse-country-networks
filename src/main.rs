@@ -6,14 +6,21 @@ use std::io::{BufReader, BufRead};
 use std::fs::File;
 use std::fs;
 
+use binary_search_tree::BinarySearchTree;
+ 
 fn main() -> io::Result<()> {
     let nets = read_nets_from_directory("./zones").expect("Could not open zone files");
+    let mut tree: BinarySearchTree<Ipv4Net> = BinarySearchTree::new();
+    for net in nets {
+        tree.insert(net);
+    }
+
     let stdin = io::stdin();
     let handle = stdin.lock();
     for line in handle.lines() {
         let str = line.unwrap();
-        let ip_address: Ipv4Addr = str.parse().expect("Invalid IP");
-        let net4 = get_containing_net(&nets, ip_address);
+        let ip_address: Ipv4Net = str.parse().expect("Invalid IP");
+        let net4 = tree.predecessor(&ip_address);
         if let Some(net) = net4 {
             println!("{}", net);
         } else {
