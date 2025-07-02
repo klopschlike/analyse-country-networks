@@ -23,9 +23,10 @@ fn main() -> io::Result<()> {
         let ip_address: Ipv4Addr = str.parse().expect("Invalid IP");
         let single_net = Ipv4Net::with_netmask(ip_address, net).expect("Invalid Net");
         let net4 = tree.predecessor(&single_net);
-        // TODO: contains has to be checked
         if let Some(net) = net4 {
-            println!("{}", net);
+            if net.contains(&ip_address) {
+                println!("{}", net);
+            }
         } else {
             println!("No matching net found for {}", ip_address);
         }
