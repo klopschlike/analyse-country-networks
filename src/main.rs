@@ -17,10 +17,13 @@ fn main() -> io::Result<()> {
 
     let stdin = io::stdin();
     let handle = stdin.lock();
+    let net = Ipv4Addr::new(255, 255, 255, 255);
     for line in handle.lines() {
         let str = line.unwrap();
-        let ip_address: Ipv4Net = str.parse().expect("Invalid IP");
-        let net4 = tree.predecessor(&ip_address);
+        let ip_address: Ipv4Addr = str.parse().expect("Invalid IP");
+        let single_net = Ipv4Net::with_netmask(ip_address, net).expect("Invalid Net");
+        let net4 = tree.predecessor(&single_net);
+        // TODO: contains has to be checked
         if let Some(net) = net4 {
             println!("{}", net);
         } else {
