@@ -7,10 +7,16 @@ use std::fs::File;
 use std::fs;
 
 use binary_search_tree::BinarySearchTree;
+
+#[derive(Eq, PartialEq, Ord, PartialOrd, Hash)]
+struct Ipv4NetWithZone {
+    net: Ipv4Net,
+    zone: String
+}
  
 fn main() -> io::Result<()> {
     let nets = read_nets_from_directory("./zones").expect("Could not open zone files");
-    let mut tree: BinarySearchTree<Ipv4Net> = BinarySearchTree::new();
+    let mut tree: BinarySearchTree<Ipv4NetWithZone> = BinarySearchTree::new();
     for net in nets {
         tree.insert(net);
     }
@@ -22,10 +28,14 @@ fn main() -> io::Result<()> {
         let str = line.unwrap();
         let ip_address: Ipv4Addr = str.parse().expect("Invalid IP");
         let single_net = Ipv4Net::with_netmask(ip_address, net).expect("Invalid Net");
-        let net4 = tree.predecessor(&single_net);
+        let dummy_zone_net = Ipv4NetWithZone {
+            net: single_net,
+            zone: "dummy".to_string()
+        };
+        let net4 = tree.predecessor(&dummy_zone_net);
         if let Some(net) = net4 {
-            if net.contains(&ip_address) {
-                println!("{}", net);
+            if net.net.contains(&ip_address) {
+                println!("{} in {} in zone {}", ip_address, net.net, net.zone);
             }
         } else {
             println!("No matching net found for {}", ip_address);
@@ -41,9 +51,9 @@ fn get_containing_net<'a>(
     nets.iter().find(|net| net.contains(&ip_address))
 }
 
-fn read_nets_from_directory(folder_path: &str) -> Result<Vec<Ipv4Net>, Box<dyn Error>>
+fn read_nets_from_directory(folder_path: &str) -> Result<Vec<Ipv4NetWithZone>, Box<dyn Error>>
 {
-    let mut nets: Vec<Ipv4Net> = Vec::new();
+    let mut nets: Vec<Ipv4NetWithZone> = Vec::new();
     for entry in fs::read_dir(folder_path)? {
         let entry = entry?;
         let path = entry.path();
@@ -59,15 +69,17 @@ fn read_nets_from_directory(folder_path: &str) -> Result<Vec<Ipv4Net>, Box<dyn E
     return Ok(nets)
 }
 
-fn read_nets_from_file(filename: &str) -> Result<Vec<Ipv4Net>, Box<dyn Error>>
+fn read_nets_from_file(filename: &str) -> Result<Vec<Ipv4NetWithZone>, Box<dyn Error>>
 {
     let file = File::open(filename)?;
     let reader = BufReader::new(file);
     let mut nets = Vec::new();
     for line_result in reader.lines() {
         let line = line_result?.trim().to_string();
-        let net: Ipv4Net = line.parse()?;
-        nets.push(net);
+        nets.push(Ipv4NetWithZone {
+            net: line.parse()?,
+            zone: filename.to_string()
+        });
     }
     Ok(nets)
 }
