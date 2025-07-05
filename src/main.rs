@@ -44,13 +44,6 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn get_containing_net<'a>(
-    nets: &'a [Ipv4Net],
-    ip_address: Ipv4Addr
-) -> Option<&'a Ipv4Net> {
-    nets.iter().find(|net| net.contains(&ip_address))
-}
-
 fn read_nets_from_directory(folder_path: &str) -> Result<Vec<Ipv4NetWithZone>, Box<dyn Error>>
 {
     let mut nets: Vec<Ipv4NetWithZone> = Vec::new();
