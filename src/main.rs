@@ -6,7 +6,7 @@ use std::io::{BufReader, BufRead};
 use std::fs::File;
 use std::fs;
 
-use binary_search_tree::BinarySearchTree;
+use std::collections::BTreeSet;
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Hash)]
 struct Ipv4NetWithZone {
@@ -16,9 +16,9 @@ struct Ipv4NetWithZone {
  
 fn main() -> io::Result<()> {
     let nets = read_nets_from_directory("./zones").expect("Could not open zone files");
-    let mut tree: BinarySearchTree<Ipv4NetWithZone> = BinarySearchTree::new();
+    let mut btree: BTreeSet<Ipv4NetWithZone> = BTreeSet::new();
     for net in nets {
-        tree.insert(net);
+        btree.insert(net);
     }
 
     let stdin = io::stdin();
@@ -32,10 +32,10 @@ fn main() -> io::Result<()> {
             net: single_net,
             zone: "dummy".to_string()
         };
-        let net4 = tree.predecessor(&dummy_zone_net);
+        let net4 = btree.range(..dummy_zone_net).next_back();
         if let Some(net) = net4 {
             if net.net.contains(&ip_address) {
-                println!("{} in {} in zone {}", ip_address, net.net, net.zone);
+                println!("{} in net {} and zone {}", ip_address, net.net, net.zone);
             }
         } else {
             println!("No matching net found for {}", ip_address);
